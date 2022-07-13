@@ -1,15 +1,13 @@
 package main
 
 import (
-	"fmt"
-
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
 func Display_laucher(){
-	fmt.Println("alu")
 	a := app.New()
 	w := a.NewWindow("welcome to cajoux laucher")
 	search_bar := widget.NewEntry()
@@ -24,11 +22,23 @@ func Display_laucher(){
 			search()
 		}),
 		widget.NewButton("custom layout", func() {
-			fmt.Println("alu")
 		}),
 	))
 
+	Display_game(w)
+	w.Resize(fyne.NewSize(800,400))
 	w.ShowAndRun()
+}
+
+func Display_game(w fyne.Window){
+	s := container.NewVBox(
+		widget.NewButton("custom layout", func() {
+		}),
+	) 
+	w.SetContent(container.NewVScroll(
+		s,
+	))
+
 }
 
 func search(){
