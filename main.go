@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"image/color"
 	"io/ioutil"
+	"regexp"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -16,9 +16,6 @@ import (
 
 type myTheme struct {}
 
-type Data struct {
-	Data []Game `json:"datas"`
-}
 
 func Display_laucher(){
 	// var _ fyne.Theme = (*myTheme)(nil)
@@ -34,32 +31,56 @@ func Display_laucher(){
 	s.Add(widget.NewButton("search", func() {search()}))
 	s.Add(widget.NewButton("custom layout", func() {}))
 
-	Display_game(w,s)
+	path := "./games"
+	tab := []string{}
+	gn := Search_game(path,tab)
+	Display_game(w,s,gn)
 	w.Resize(fyne.NewSize(800,400))
 	// a.Settings().SetTheme(&myTheme{})
 	w.ShowAndRun()
 }
 
 
-func Display_game(w fyne.Window, s *fyne.Container){
+func Search_game(path string, tab []string) []string{
+	items, _ := ioutil.ReadDir(path)
+    for _, item := range items {
+		//fmt.Println(item.Name())
+		match, _ := regexp.MatchString(".exe$", item.Name())
+		if match {
+			fmt.Println(item.Name())
+			tab = append(tab,item.Name())
+		} else if item.IsDir(){
+			tab = In_folder("./games/"+item.Name(),tab)
+		}
+	}
+	return tab
+}
 
-		//read game_path.txt
-		f, _ := ioutil.ReadFile("data.json")
-		datas := Data{}
-		_ = json.Unmarshal([]byte(f), &datas)
-		//scanner := bufio.NewScanner(f)
+func In_folder(path string, tab []string) []string {
+	items, _ := ioutil.ReadDir(path)
+    for _, item := range items {
+		match, _ := regexp.MatchString(".exe$", item.Name())
+		if match {
+			tab = append(tab,item.Name())
+			return tab
+		}
+	}
+	return tab
+}
+
+func Display_game(w fyne.Window, s *fyne.Container, game_name []string){
 
 		var s2 *fyne.Container
 		var box *container.Scroll
 		s2 = container.New(layout.NewVBoxLayout())
 
 		//display games layout
-		for i := 0; i < len(datas.Data); i++ {
-			fmt.Println(datas.Data[i])
+		for i := 0; i < len(game_name); i++ {
+			//fmt.Println(game_name[i])
 			var s3 *fyne.Container
 			s3 = container.New(layout.NewGridLayout(3))
-			label := widget.NewLabel(datas.Data[i].GameName)
-			x := widget.NewButton(datas.Data[i].Path, func() {})
+			label := widget.NewLabel(game_name[i])
+			x := widget.NewButton("lanch", func() {})
 			s3.Add(label)
 			s3.Add(x)
 
@@ -73,10 +94,6 @@ func Display_game(w fyne.Window, s *fyne.Container){
 			s,
 			box,
 		),)
-
-		// if err := scanner.Err(); err != nil {
-		// 	log.Fatal(err)
-		// }
 }
 
 func (m myTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
