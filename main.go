@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"image/color"
 	"io/ioutil"
+	"os/exec"
 	"regexp"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -61,26 +63,30 @@ func In_folder(path string, tab []string) []string {
     for _, item := range items {
 		match, _ := regexp.MatchString(".exe$", item.Name())
 		if match {
-			tab = append(tab,item.Name())
+			tab = append(tab,path + "/" + item.Name())
 			return tab
+		} else if item.IsDir(){
+			tab = In_folder(path + "/" +item.Name(),tab)
 		}
 	}
 	return tab
 }
 
-func Display_game(w fyne.Window, s *fyne.Container, game_name []string){
+func Display_game(w fyne.Window, s *fyne.Container, game_path []string){
 
 		var s2 *fyne.Container
 		var box *container.Scroll
 		s2 = container.New(layout.NewVBoxLayout())
 
 		//display games layout
-		for i := 0; i < len(game_name); i++ {
-			//fmt.Println(game_name[i])
+		for _, i := range game_path {
+			fmt.Println(i)
+			game_name := strings.Split(i, "/")
+			name := game_name[len(game_name)-1]
 			var s3 *fyne.Container
 			s3 = container.New(layout.NewGridLayout(3))
-			label := widget.NewLabel(game_name[i])
-			x := widget.NewButton("lanch", func() {})
+			label := widget.NewLabel(name)
+			x := widget.NewButton("lanch", func() {lauch_game(i)})
 			s3.Add(label)
 			s3.Add(x)
 
@@ -94,6 +100,11 @@ func Display_game(w fyne.Window, s *fyne.Container, game_name []string){
 			s,
 			box,
 		),)
+}
+
+func lauch_game(path string){
+    cmnd := exec.Command(path, "arg")
+    cmnd.Start()
 }
 
 func (m myTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
