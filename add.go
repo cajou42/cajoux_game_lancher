@@ -10,6 +10,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+type Data struct {
+	Data []Game `json:"datas"`
+}
+
 type Game struct {
 	GameName string `json:"GameName"`
 	Path string `json:"Path"`
@@ -50,7 +54,9 @@ func write_game_path(name string, txt string){
 
 	file, _ := ioutil.ReadFile("data.json")
 
-	data := []Game{}
+	data := &Data{
+		Data: []Game{},
+    }
 
     json.Unmarshal(file, &data)
 
@@ -59,7 +65,9 @@ func write_game_path(name string, txt string){
 		Path: txt,
     }
 
-	data = append(data, *newStruct)
+	fmt.Println(data)
+
+	data.Data = append(data.Data, *newStruct)
 
 	file, err := json.Marshal(data)
 	if err != nil {

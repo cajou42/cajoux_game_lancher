@@ -1,12 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"image/color"
 	"io/ioutil"
 	"os/exec"
-	"regexp"
-	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -32,61 +31,36 @@ func Display_laucher(){
 	s.Add(search_bar)
 	s.Add(widget.NewButton("search", func() {search()}))
 	s.Add(widget.NewButton("custom layout", func() {}))
-
-	path := "./games"
-	tab := []string{}
-	gn := Search_game(path,tab)
-	Display_game(w,s,gn)
+	Display_game(w,s)
 	w.Resize(fyne.NewSize(800,400))
 	// a.Settings().SetTheme(&myTheme{})
 	w.ShowAndRun()
 }
 
 
-func Search_game(path string, tab []string) []string{
-	items, _ := ioutil.ReadDir(path)
-    for _, item := range items {
-		//fmt.Println(item.Name())
-		match, _ := regexp.MatchString(".exe$", item.Name())
-		if match {
-			fmt.Println(item.Name())
-			tab = append(tab,item.Name())
-		} else if item.IsDir(){
-			tab = In_folder("./games/"+item.Name(),tab)
-		}
-	}
-	return tab
-}
-
-func In_folder(path string, tab []string) []string {
-	items, _ := ioutil.ReadDir(path)
-    for _, item := range items {
-		match, _ := regexp.MatchString(".exe$", item.Name())
-		if match {
-			tab = append(tab,path + "/" + item.Name())
-			return tab
-		} else if item.IsDir(){
-			tab = In_folder(path + "/" +item.Name(),tab)
-		}
-	}
-	return tab
-}
-
-func Display_game(w fyne.Window, s *fyne.Container, game_path []string){
+func Display_game(w fyne.Window, s *fyne.Container){
 
 		var s2 *fyne.Container
 		var box *container.Scroll
 		s2 = container.New(layout.NewVBoxLayout())
 
+		    //read data.json
+			f, _ := ioutil.ReadFile("data.json")
+			datas := Data{}
+			_ = json.Unmarshal([]byte(f), &datas)
+
 		//display games layout
-		for _, i := range game_path {
-			fmt.Println(i)
-			game_name := strings.Split(i, "/")
-			name := game_name[len(game_name)-1]
+		for i := 0; i < len(datas.Data); i++ {
+			fmt.Println(datas.Data[i])
 			var s3 *fyne.Container
 			s3 = container.New(layout.NewGridLayout(3))
-			label := widget.NewLabel(name)
-			x := widget.NewButton("lanch", func() {lauch_game(i)})
+			label := widget.NewLabel(datas.Data[i].GameName)
+			fn := func(i int) func() {
+                return func() {
+                    launch_game(datas.Data[i].Path)
+                }
+            }(i)
+			x := widget.NewButton("launch", fn)
 			s3.Add(label)
 			s3.Add(x)
 
@@ -102,7 +76,7 @@ func Display_game(w fyne.Window, s *fyne.Container, game_path []string){
 		),)
 }
 
-func lauch_game(path string){
+func launch_game(path string){
     cmnd := exec.Command(path, "arg")
     cmnd.Start()
 }
